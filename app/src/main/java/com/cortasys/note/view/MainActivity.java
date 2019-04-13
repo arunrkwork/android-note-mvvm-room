@@ -18,7 +18,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import com.cortasys.note.NoteAdapter;
 import com.cortasys.note.R;
 import com.cortasys.note.db.entity.Note;
 import com.cortasys.note.viewmodel.NoteViewModel;
@@ -26,9 +25,15 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.List;
 
+import static com.cortasys.note.view.AddNoteActivity.EXTRA_DESC;
+import static com.cortasys.note.view.AddNoteActivity.EXTRA_ID;
+import static com.cortasys.note.view.AddNoteActivity.EXTRA_SH_DESC;
+import static com.cortasys.note.view.AddNoteActivity.EXTRA_TITLE;
+
 public class MainActivity extends AppCompatActivity {
 
     public static final int ADD_REQUEST = 1;
+    public static final int EDIT_REQUEST = 2;
     private static final String TAG = "MainActivity";
 
     NoteViewModel mNoteViewModel;
@@ -57,11 +62,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChanged(@Nullable List<Note> notes) {
                 Log.d(TAG, "onChanged: ");
-                if (notes != null) {
-                    for (int i = 0; i < notes.size(); i++)
-                        Log.d(TAG, "data : " + notes.get(i).getTitle());
-                } else Log.d(TAG, "onChanged: null");
-                mNoteAdapter.setNotes(notes);
+//                if (notes != null) {
+//                    for (int i = 0; i < notes.size(); i++)
+//                        Log.d(TAG, "data : " + notes.get(i).getTitle());
+//                } else Log.d(TAG, "onChanged: null");
+                mNoteAdapter.submitList(notes);
+
             }
         });
 
@@ -92,6 +98,20 @@ public class MainActivity extends AppCompatActivity {
             }
         }).attachToRecyclerView(mRecyclerView);
 
+
+        mNoteAdapter.setOnItemClickListener(new NoteAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(Note note) {
+                Log.d(TAG, "onItemClick: " + note.getTitle());
+                Intent intent = new Intent(MainActivity.this, AddNoteActivity.class);
+                intent.putExtra(EXTRA_ID, note.getId());
+                intent.putExtra(EXTRA_TITLE, note.getTitle());
+                intent.putExtra(EXTRA_SH_DESC, note.getShortDesc());
+                intent.putExtra(EXTRA_DESC, note.getLongDesc());
+                startActivityForResult(intent, EDIT_REQUEST);
+            }
+        });
+
     }
 
     @Override
@@ -117,12 +137,31 @@ public class MainActivity extends AppCompatActivity {
 
         if (requestCode == ADD_REQUEST && resultCode == RESULT_OK) {
 
-            String title = data.getStringExtra(AddNoteActivity.EXTRA_TITLE);
-            String shDesc = data.getStringExtra(AddNoteActivity.EXTRA_SH_DESC);
-            String desc = data.getStringExtra(AddNoteActivity.EXTRA_DESC);
+            String title = data.getStringExtra(EXTRA_TITLE);
+            String shDesc = data.getStringExtra(EXTRA_SH_DESC);
+            String desc = data.getStringExtra(EXTRA_DESC);
 
             Note note = new Note(title, shDesc, desc);
             mNoteViewModel.insert(note);
+        } else if (requestCode == EDIT_REQUEST && resultCode == RESULT_OK) {
+
+            int id = data.getIntExtra(EXTRA_ID,  -1);
+            
+            if (id == -1) {
+                Toast.makeText(this, "Note cant update. something went wrong.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            String title = data.getStringExtra(EXTRA_TITLE);
+            String shDesc = data.getStringExtra(EXTRA_SH_DESC);
+            String desc = data.getStringExtra(EXTRA_DESC);
+            
+
+            Note note = new Note(title, shDesc, desc);
+            note.setId(id);
+            mNoteViewModel.update(note);
+        } else {
+            Toast.makeText(this, "Note Not Saved", Toast.LENGTH_SHORT).show();
         }
     }
 

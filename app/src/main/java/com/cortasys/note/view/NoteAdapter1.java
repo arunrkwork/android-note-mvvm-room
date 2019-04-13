@@ -1,10 +1,11 @@
-package com.cortasys.note;
+package com.cortasys.note.view;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.cortasys.note.R;
 import com.cortasys.note.db.entity.Note;
 
 import java.util.ArrayList;
@@ -13,9 +14,10 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder> {
+public class NoteAdapter1 extends RecyclerView.Adapter<NoteAdapter1.NoteViewHolder> {
 
     private List<Note> notes = new ArrayList<>();
+    OnItemClickListener onItemClickListener;
 
     @NonNull
     @Override
@@ -57,6 +59,24 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
             txtTitle = itemView.findViewById(R.id.txtTitle);
             txtShortDesc = itemView.findViewById(R.id.txtShortDesc);
             txtDesc = itemView.findViewById(R.id.txtDesc);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (onItemClickListener !=null && getAdapterPosition() != RecyclerView.NO_POSITION)
+                    onItemClickListener.onItemClick(notes.get(getAdapterPosition()));
+                }
+            });
+
         }
     }
+
+    public interface OnItemClickListener {
+        void onItemClick(Note note);
+    }
+
+    public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
+        this.onItemClickListener = onItemClickListener;
+    }
+
 }
